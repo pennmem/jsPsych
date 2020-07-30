@@ -40,15 +40,14 @@
            user-select: none; /* Non-prefixed version, currently
                                  supported by Chrome, Edge, Opera and Firefox */
 }
- }
 
- .jspsych-top {
-   align-items: flex-start;
- }
+.jspsych-top {
+  align-items: flex-start;
+}
 
- .jspsych-middle {
-   align-items: center;
- }
+.jspsych-middle {
+  align-items: center;
+}
 
 /* fonts and type */
 
@@ -96,6 +95,20 @@
   color: #aaa;
   border-color: #ccc;
   cursor: not-allowed;
+}
+
+#map-response-div {
+  width: 500px;
+  height: 500px;
+}
+
+#map-canvas {
+  width: 100%;
+  height: 90%;
+}
+
+#map-response-button {
+  height: 8%;
 }
 
 /* jsPsych progress bar */
