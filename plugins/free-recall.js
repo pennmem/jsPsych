@@ -83,7 +83,7 @@ jsPsych.plugins['free-recall'] = (function() {
 
     // add question and textbox for answer
     display_element.innerHTML += '<div id="jspsych-free-recall" class="jspsych-free-recall-question" style="margin: 2em 0em;">'+
-      '<input class="task-input" name="jspsych-free-recall-response" id="recall_box" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" pattern=".{' + trial.min_length + ',' + trial.max_length + '}" required autofocus>'+
+      '<input class="task-input" name="jspsych-free-recall-response" id="recall_box" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" pattern=".{' + trial.min_length + ',' + trial.max_length + '}" required autofocus="true">'+
       '</div>';
 
     // set up response collection
@@ -92,9 +92,12 @@ jsPsych.plugins['free-recall'] = (function() {
     var key_presses = [];
     var key_times = [];
 
-    $(function(){
-      $('input').focus();
-    })
+    // $(function(){
+    //   $('input').focus();
+    // })
+    
+    // chrome workaround January 2020
+    document.querySelector(".task_input").focus();
 
     var set_response_timeout= function() {
       if(trial.timeout != null) {
