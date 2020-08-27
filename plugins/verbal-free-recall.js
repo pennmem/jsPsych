@@ -262,4 +262,3 @@ jsPsych.plugins["image-audio-response"] = (function() {
 
     return plugin;
 })();
-© 2020 GitHub, Inc.
