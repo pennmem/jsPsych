@@ -32,6 +32,7 @@ window.jsPsych = (function() {
   // done loading?
   var loaded = false;
   var loadfail = false;
+  core.recordingStream = null;
 
   // storing a single webaudio context to prevent problems with multiple inits
   // of jsPsych
@@ -993,6 +994,38 @@ window.jsPsych = (function() {
       }
     }
 
+    // RECORDING
+  if(typeof exclusions.microphone !== 'undefined' && exclusions.microphone) {
+      if(core.recordingStream == null || core.recordingStream == 'undefined') {
+          clear = false;
+          navigator.mediaDevices.getUserMedia({audio:true})
+              .then(stream => {
+                  try { 
+                      console.log("trying to create recorder");
+                      core.recordingStream = new MediaRecorder(stream);
+                      console.log("tried to create recorder");
+                      checkExclusions(exclusions, success, fail);
+                      console.log("checking exclusions");
+                  } catch (e){
+                      console.log(e.message);
+                      var msg = "Sorry, it's not possible to run the experiment in your web browser. Please try updating your browser or using Chrome or Firefox instead.";
+                      core.getDisplayElement().innerHTML = msg;
+                      fail();
+                  }
+              })
+              .catch(error => {
+                  var msg = "You must allow audio recording to take part in the experiment. Please reload the page and allow access to your microphone to proceed.";
+                  core.getDisplayElement().innerHTML = msg;
+                  fail();
+              });
+          return;
+      }
+      else {
+          core.getDisplayElement().innerHTML = '';
+      }
+  }
+
+    console.log("success");
     // GO?
     if(clear){ success(); }
   }
@@ -2165,6 +2198,21 @@ jsPsych.pluginAPI = (function() {
 
   }
 
+  // microphone //
+
+  module.getRecordingBuffer = function() {
+    if(typeof jsPsych.recordingStream === 'undefined') {
+      return null;
+    }
+    
+    if(jsPsych.recordingStream.state =='recording'){
+        //TODO: error
+    }
+    
+    return jsPsych.recordingStream;
+  }
+
+  
   // preloading stimuli //
 
   var preloads = [];
