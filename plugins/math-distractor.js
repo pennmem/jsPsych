@@ -52,7 +52,7 @@ jsPsych.plugins['math-distractor'] = (function() {
       // setup question and response box
       var nums = [math.randomInt(1,10), math.randomInt(1,10), math.randomInt(1,10)];
       current_answer = nums.reduce(function(a, b){ return a + b; }, 0);
-      var prob = '<div class="math"><label>' + nums[0].toString() + ' + ' + nums[1].toString() + ' + ' + nums[2].toString() + ' = </label>';
+      var prob = '<div id="math"><label>' + nums[0].toString() + ' + ' + nums[1].toString() + ' + ' + nums[2].toString() + ' = </label>';
       display_element.innerHTML = prob + tbox;
 
       // log the new problem
@@ -60,6 +60,7 @@ jsPsych.plugins['math-distractor'] = (function() {
       num_b.push(nums[1]);
       num_c.push(nums[2]);
 
+      //chrome workaround January 2020
       display_element.querySelector('#math_box').focus();
 
       // // automatically place cursor in textarea when page loads
@@ -90,7 +91,7 @@ jsPsych.plugins['math-distractor'] = (function() {
         recalled_words.push(word);
 
         var callback = function() {
-          display_element.querySelector('.math').style.color = "#ffffff";
+          display_element.querySelector('#math').style.color = "#ffffff";
           display_element.querySelector('#math_box').style.color = "#ffffff";
           if(timed_out) {
             end_trial();
@@ -102,7 +103,7 @@ jsPsych.plugins['math-distractor'] = (function() {
 
         // TODO: play beep and change text color
         if(word == current_answer) {
-          display_element.querySelector('.math').style.color = "#00ff00";
+          display_element.querySelector('#math').style.color = "#00ff00";
           display_element.querySelector('#math_box').style.color = "#00ff00";
 
           if(trial.audio_correct != null) {
@@ -114,7 +115,7 @@ jsPsych.plugins['math-distractor'] = (function() {
           }
         }
         else {
-          display_element.querySelector('.math').style.color = "#ff0000";
+          display_element.querySelector('#math').style.color = "#ff0000";
           display_element.querySelector('#math_box').style.color = "#ff0000";
 
           if(trial.audio_incorrect != null) {
