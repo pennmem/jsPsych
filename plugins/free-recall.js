@@ -97,7 +97,7 @@ jsPsych.plugins['free-recall'] = (function() {
     // })
     
     // chrome workaround January 2020
-    document.querySelector(".task_input").focus();
+    document.querySelector(".task-input").focus();
 
     var set_response_timeout= function() {
       if(trial.timeout != null) {
