@@ -45,6 +45,18 @@ jsPsych.plugins['my-free-sort'] = (function() {
           pretty_name: 'Button label',
           default:  'Submit',
           description: 'The text that appears on the button to continue to the next trial.'
+        },
+        width: {
+          type: jsPsych.plugins.parameterType.INT, 
+          pretty_name: 'Width',
+          default: null,
+          description: 'The width of the display area',
+        },
+        height: {
+          type: jsPsych.plugins.parameterType.INT, 
+          pretty_name: 'Height',
+          default: null,
+          description: 'The height of the display area',
         }
       }
     }
@@ -66,12 +78,12 @@ jsPsych.plugins['my-free-sort'] = (function() {
           trial.list_length = trial.stimuli.length;
       }
   
-      var sort_width = document.documentElement.clientWidth*.92;
-      var sort_height = document.documentElement.clientHeight*.92;
-  
+      var sort_height = trial.height;
+      var sort_width = trial.width;
       var stim_width = .2*(sort_width);
-      var stim_height = .8*(sort_height / trial.list_length);
-      var padding = .2*(sort_height / trial.list_length);
+      var stim_height = .8*( sort_height / trial.list_length);
+      var padding = .2*( sort_height / trial.list_length);
+      var border_width = 2;
 
       var offset = 3;
   
@@ -79,7 +91,7 @@ jsPsych.plugins['my-free-sort'] = (function() {
       html += '<div '+
         'id="jspsych-free-sort-arena" '+
         'class="jspsych-free-sort-arena" '+
-        'style="position: relative; width:'+sort_width+'px; height:'+sort_height+'px; border:2px solid #444;"'+
+        'style="position: relative; width:'+trial.width+'px; height:'+trial.height+'px; border:' + border_width + 'px solid #444;"'+
         '></div>';
       var arena = display_element.querySelector("#jspsych-free-sort-arena");  
       
@@ -102,8 +114,8 @@ jsPsych.plugins['my-free-sort'] = (function() {
         'style="position: absolute; ' +
         'display: flex; justify-content: center; ' +
         'align-items: center; text-align: center; ' +
-        'vertical-align: middle; cursor: move; width:' + stim_width + 'px; ' +
-        'height:' + stim_height + 'px; left:' + stim_width + 'px; ' + 
+        'vertical-align: middle; cursor: move; width:' + (2*border_width + stim_width) + 'px; ' +
+        'height:' + (stim_height + 2*border_width) + 'px; left:' + stim_width + 'px; ' + 
         'top:' + top_coord + 'px;">' + trial.stimuli[i] + //adding word
         '</div>';
       }
@@ -132,7 +144,7 @@ jsPsych.plugins['my-free-sort'] = (function() {
           'height:'  + stim_height + 'px; ' +
           'top: '+ top_coord +'px; ' +
           'left: '+ offset*stim_width +'px;  ' +
-          'border:2px solid red; margin:0px;"'+
+          'border:'+ border_width +'px solid red; margin:0px;"'+
           '></div>';
       }
       
@@ -205,10 +217,10 @@ jsPsych.plugins['my-free-sort'] = (function() {
             for(var j=0; j<targets.length; j++){ 
               // TODO: funcify
               var in_target = false;
-              if(e.clientX - parseInt(e.currentTarget.parentNode.offsetLeft) >= parseInt(targets[j].style.left)
-                  && e.clientX - parseInt(e.currentTarget.parentNode.offsetLeft) <= parseInt(targets[j].style.left) + stim_width 
-                  && e.clientY - parseInt(e.currentTarget.parentNode.offsetTop) >= parseInt(targets[j].style.top) 
-                  && e.clientY - parseInt(e.currentTarget.parentNode.offsetTop) <= parseInt(targets[j].style.top) + stim_height) {
+              if(e.clientX - parseInt(e.currentTarget.parentNode.offsetLeft) - 2*border_width >= parseInt(targets[j].style.left)
+                  && e.clientX - parseInt(e.currentTarget.parentNode.offsetLeft) - 2*border_width <= parseInt(targets[j].style.left) + stim_width 
+                  && e.clientY - parseInt(e.currentTarget.parentNode.offsetTop) - 2*border_width >= parseInt(targets[j].style.top) 
+                  && e.clientY - parseInt(e.currentTarget.parentNode.offsetTop) - 2*border_width <= parseInt(targets[j].style.top) + stim_height) {
                 in_target = true;
               }
   
@@ -216,8 +228,8 @@ jsPsych.plugins['my-free-sort'] = (function() {
               
               //Case: elem is in range and target hasn't been snapped ==> snap to (assume) target's position
               if(in_target && target_empty){ 
-                e.currentTarget.style.left = (parseInt(targets[j].style.left) + offset)+'px'; 
-                e.currentTarget.style.top = (parseInt(targets[j].style.top) + offset)+'px'; 
+                e.currentTarget.style.left = (parseInt(targets[j].style.left) + offset - 2*border_width)+'px'; 
+                e.currentTarget.style.top = (parseInt(targets[j].style.top) + offset - 2*border_width)+'px'; 
   
                 targets[j].style.borderColor = 'lightblue';
                 targets[j].dataset.filled = e.currentTarget.dataset.id;

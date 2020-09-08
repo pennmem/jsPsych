@@ -37,7 +37,7 @@ jsPsych.plugins["countdown"] = (function() {
     // hide stimulus if stimulus_duration is set
     var number = trial.seconds
     var callback = function() {
-      display_element.innerHTML = "<p id='stim'>" + number.toString() + "</p>";
+      display_element.innerHTML = "<p class='stim'>" + number.toString() + "</p>";
       number--
       jsPsych.pluginAPI.setTimeout(callback, 1000);
     }
