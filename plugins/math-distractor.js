@@ -50,7 +50,7 @@ jsPsych.plugins['math-distractor'] = (function() {
 
     var gen_trial = function() {
       // setup question and response box
-      var nums = [randomInt(1,10), randomInt(1,10), randomInt(1,10)];
+      var nums = [math.randomInt(1,10), math.randomInt(1,10), math.randomInt(1,10)];
       current_answer = nums.reduce(function(a, b){ return a + b; }, 0);
       var prob = '<div id="math"><label>' + nums[0].toString() + ' + ' + nums[1].toString() + ' + ' + nums[2].toString() + ' = </label>';
       display_element.innerHTML = prob + tbox;
@@ -60,10 +60,13 @@ jsPsych.plugins['math-distractor'] = (function() {
       num_b.push(nums[1]);
       num_c.push(nums[2]);
 
-      // automatically place cursor in textarea when page loads
-      $(function(){
-        $('input').focus();
-      });
+      //chrome workaround January 2020
+      display_element.querySelector('#math_box').focus();
+
+      // // automatically place cursor in textarea when page loads
+      // $(function(){
+      //   $('input').focus();
+      // });
     };
 
     var isdigit = function(char){

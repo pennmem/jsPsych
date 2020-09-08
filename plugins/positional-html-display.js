@@ -49,6 +49,18 @@ jsPsych.plugins["positional-html-display"] = (function() {
         default: 0,
         description: 'Column to display html'
       },
+      width: {
+        type: jsPsych.plugins.parameterType.STRING, 
+        pretty_name: 'Width',
+        default: null,
+        description: 'The width of the display area',
+      },
+      height: {
+        type: jsPsych.plugins.parameterType.STRING, 
+        pretty_name: 'Height',
+        default: null,
+        description: 'The height of the display area',
+      }
     }
   }
 
@@ -69,7 +81,8 @@ jsPsych.plugins["positional-html-display"] = (function() {
 
   /*------------Check Sizing------------------*/
 
-    var css_grid = "<style>#container {display: grid; grid-template-columns: repeat(" + trial.grid_cols + ", 1fr); grid-template-rows: repeat(" + trial.grid_rows + ", 1fr); width: 95vw; height: 95vh; align-items:center} </style>";
+    // TODO: set height and width
+    var css_grid = "<style>#container {display: grid; grid-template-columns: repeat(" + trial.grid_cols + ", 1fr); grid-template-rows: repeat(" + trial.grid_rows + ", 1fr); width: " + trial.width +"; height: " + trial.height + "; align-items:center} </style>";
 
     if(trial.row > trial.grid_rows  || trial.col > trial.grid_cols) {
       throw "Grid index out of range";
@@ -90,7 +103,6 @@ jsPsych.plugins["positional-html-display"] = (function() {
     stim.style.marginTop = "0px"
     stim.style.marginBottom = "0px"
     stim.style.alignSelf = "center";
-    stim.style.fontSize = (95/trial.grid_rows) + "vh";
 
     var after_response = function(info) {
         response.push(info);
