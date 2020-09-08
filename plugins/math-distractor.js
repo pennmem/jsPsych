@@ -48,9 +48,15 @@ jsPsych.plugins['math-distractor'] = (function() {
     var timed_out = false;
     var current_answer;
 
+    function randomInt(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+
     var gen_trial = function() {
       // setup question and response box
-      var nums = [math.randomInt(1,10), math.randomInt(1,10), math.randomInt(1,10)];
+      var nums = [randomInt(1, 9), randomInt(1,9), randomInt(1,9)];
       current_answer = nums.reduce(function(a, b){ return a + b; }, 0);
       var prob = '<div id="math"><label>' + nums[0].toString() + ' + ' + nums[1].toString() + ' + ' + nums[2].toString() + ' = </label>';
       display_element.innerHTML = prob + tbox;
