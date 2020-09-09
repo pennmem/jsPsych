@@ -193,9 +193,9 @@ jsPsych.plugins['my-free-sort'] = (function() {
               elem.removeEventListener('mouseup', mouseupevent);
               document.removeEventListener('mousemove', mousemoveevent);
               
-              var ind = e.currentTarget.dataset.id;
-              e.currentTarget.style.left = (init_locations[ind].x+'px'); 
-              e.currentTarget.style.top = (init_locations[ind].y+'px');
+              var ind = elem.dataset.id;
+              elem.style.left = (init_locations[ind].x+'px');
+              elem.style.top = (init_locations[ind].y+'px');
   
               //event times for case
               var end_t = performance.now()
