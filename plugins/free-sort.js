@@ -5,338 +5,256 @@
  *
  * documentation: docs.jspsych.org
  */
- 
+
 jsPsych.plugins['my-free-sort'] = (function() {
 
     var plugin = {};
-  
-      plugin.info = {
-      name: 'my-free-sort',
-      description: '',
-        parameters: {
-        stimuli: {
-          type: jsPsych.plugins.parameterType.STRING,
-          pretty_name: 'Stimuli',
-          default: undefined,
-          array: true,
-          description: 'Word to be displayed.'
-        },
-        list_length: {
-          type: jsPsych.plugins.parameterType.INT,
-          pretty_name: 'List Length',
-          default: null,
-          description: 'The implicit number of slots for items',
-        },
-        prompt: {
-          type: jsPsych.plugins.parameterType.STRING,
-          pretty_name: 'Prompt',
-          default: null,
-          description: 'It can be used to provide a reminder about the action the subject is supposed to take.'
-        },
-        prompt_location: {
-          type: jsPsych.plugins.parameterType.SELECT,
-          pretty_name: 'Prompt location',
-          options: ['above','below'],
-          default: 'above',
-          description: 'Indicates whether to show prompt "above" or "below" the sorting area.'
-        },
-        button_label: {
-          type: jsPsych.plugins.parameterType.STRING,
-          pretty_name: 'Button label',
-          default:  'Submit',
-          description: 'The text that appears on the button to continue to the next trial.'
-        },
-        width: {
-          type: jsPsych.plugins.parameterType.INT, 
-          pretty_name: 'Width',
-          default: null,
-          description: 'The width of the display area',
-        },
-        height: {
-          type: jsPsych.plugins.parameterType.INT, 
-          pretty_name: 'Height',
-          default: null,
-          description: 'The height of the display area',
-        }
-      }
-    }
-  
-    plugin.trial = function(display_element, trial) {
-  
-      /*-----------------------------------------Creating the Environment-----------------------------------------*/
-      var time_elapsed = jsPsych.totalTime();
-      var start_time = performance.now(); //time elapsed since origin (window-load)
-      var html = "";
-      var coords = 40;
-      
-      // check if prompt exists above arena
-      if (trial.prompt !== null && trial.prompt_location == "above") {
-        html += trial.prompt;
-      }
-  
-      if (trial.list_length == null) {
-          trial.list_length = trial.stimuli.length;
-      }
-  
-      var sort_height = trial.height;
-      var sort_width = trial.width;
-      var stim_width = .2*(sort_width);
-      var stim_height = .8*( sort_height / trial.list_length);
-      var padding = .2*( sort_height / trial.list_length);
-      var border_width = 2;
 
-      var offset = 3;
-  
-      //creating the arena (div defining drag boundary)
-      html += '<div '+
-        'id="jspsych-free-sort-arena" '+
-        'class="jspsych-free-sort-arena" '+
-        'style="position: relative; width:'+trial.width+'px; height:'+trial.height+'px; border:' + border_width + 'px solid #444;"'+
-        '></div>';
-      var arena = display_element.querySelector("#jspsych-free-sort-arena");  
-      
-      // check if prompt exists below arena
-      if (trial.prompt !== null && trial.prompt_location == "below") {
-        html += trial.prompt;
-      } 
-      
-      //draw
-      display_element.innerHTML = html; 
-  
-      //create draggable-word-elements
-      for (var i = 0; i < trial.stimuli.length; i++) { 
-        var top_coord = i*stim_height + (i+.5)*padding;
-        display_element.querySelector("#jspsych-free-sort-arena").innerHTML += '<div ' + 
-        'class="jspsych-free-sort-draggable" '+
-        'draggable="false" '+
-        'data-snapped=-1 ' +
-        'data-id='+ i + ' ' +
-        'style="position: absolute; ' +
-        'display: flex; justify-content: center; ' +
-        'align-items: center; text-align: center; ' +
-        'vertical-align: middle; cursor: move; width:' + (2*border_width + stim_width) + 'px; ' +
-        'height:' + (stim_height + 2*border_width) + 'px; left:' + stim_width + 'px; ' + 
-        'top:' + top_coord + 'px;">' + trial.stimuli[i] + //adding word
-        '</div>';
-      }
-      
-      //list of initial word locations
-      var init_locations = [];
-      var dragItems = display_element.querySelectorAll('.jspsych-free-sort-draggable')
-      for(var i = 0; i < trial.stimuli.length; i++) { 
-        init_locations.push({ 
-          'word': dragItems[i].innerHTML, 
-          "x": parseInt(dragItems[i].style.left), 
-          "y": parseInt(dragItems[i].style.top) 
-        });
-      }
-  
-      //targets for draggables
-      for (var i = 0; i < trial.stimuli.length; i++) { 
-          var top_coord = i*stim_height + (i+.5)*padding;
-          display_element.querySelector('#jspsych-free-sort-arena').innerHTML +='<div '+
-          'id="jspsych-target" '+
-          'class="jspsych-target" '+
-          'data-filled=-1 ' +
-          'data-id=' + i + ' ' +
-          'style="position: absolute; ' +
-          'width:' + stim_width + 'px; ' +
-          'height:'  + stim_height + 'px; ' +
-          'top: '+ top_coord +'px; ' +
-          'left: '+ offset*stim_width +'px;  ' +
-          'border:'+ border_width +'px solid red; margin:0px;"'+
-          '></div>';
-      }
-      
-      display_element.innerHTML += '<button id="jspsych-free-sort-done-btn" class="jspsych-btn">'+trial.button_label+'</button>'; 
-      
-      var maxz = 1; //used to resolve overlapping issues
-      var draggables = display_element.querySelectorAll('.jspsych-free-sort-draggable'); 
-      var targets = display_element.querySelectorAll('.jspsych-target'); 
-      var RTs = []; //list for storing time data
-  
-      //reposition the clicked elem 
-      for(var i=0;i<draggables.length; i++){
-        draggables[i].addEventListener('mousedown', function(event) {  //listener for when mouse is clicked over element
-  
-          var x = event.clientX - event.currentTarget.offsetLeft; // click to elem left. (click x-coord from page left) - (div left to parent (arena) left)
-          var y = event.clientY - event.currentTarget.offsetTop; // click to elem top. (click y-coord from page top) - (div top to parent (arena) top)
-          var elem = event.currentTarget; 
-  
-          // FIXME: shouldn't be an issue, but could overflow. No need to have infinitely incrementing z stack
-          elem.style.zIndex = ++maxz; //ensures elem currently being dragged is granted stacking priority in a case of overlap
-  
-          RTs.push({
-            'word': elem.innerHTML,
-            'time': performance.now()-start_time,
-            'target': elem.dataset.snapped,
-            'mode': 'leaving',
-          })
-  
-          if(elem.dataset.snapped != -1) {
-            var ind = elem.dataset.snapped;
-            targets[ind].style.borderColor = 'red';
-            targets[ind].dataset.filled = -1;
-            elem.dataset.snapped = -1;
-          }
-  
-          // repos elem by dist from left of arena (x) and dist from top of arena (y) 
-          // lowest of nums: either (arena height - elem height) or the larger of 0 or (dist from click (x,y coord) to top of currently viewable window - click to elem corner/top)
-          // seemingly, these do the same thing (click to window top - click to elem top = elem top to window top) and (arena height-elem height = dist from elem to arena y coord)
-          var mousemoveevent = function(e) { 
-            elem.style.top =  Math.max(1, Math.min(sort_height - stim_height, (e.clientY - y))) + 'px';  
-            elem.style.left = Math.max(1, Math.min(sort_width - stim_width, (e.clientX - x))) + 'px';
-          }
-          document.addEventListener('mousemove', mousemoveevent); //add mouse-move post click listener to doc. func (above) positions elem according to mouse move
-  
-          var mouseleaveevent = function(e) {
-              elem.removeEventListener('mouseup', mouseupevent);
-              document.removeEventListener('mousemove', mousemoveevent);
-              
-              var ind = elem.dataset.id;
-              elem.style.left = (init_locations[ind].x+'px');
-              elem.style.top = (init_locations[ind].y+'px');
-  
-              //event times for case
-              var end_t = performance.now()
-              RTs.push({
-                'word': e.currentTarget.innerHTML,
-                'time': end_t-start_time,
-                'target': -1,
-                'mode': 'dropped',
-              })         
-  
-              display_element.querySelector("#jspsych-free-sort-arena").removeEventListener('mouseleave', mouseleaveevent);
-          }
-          display_element.querySelector('#jspsych-free-sort-arena').addEventListener('mouseleave', mouseleaveevent);
-          
-          var mouseupevent = function(e){ //when click ends, end movement listener (so elem stays where it is) and add data to 'moves' object in data. finally, end self
-            document.removeEventListener('mousemove', mousemoveevent); 
-            display_element.querySelector("#jspsych-free-sort-arena").removeEventListener('mouseleave', mouseleaveevent);
-          
-            for(var j=0; j<targets.length; j++){ 
-              // TODO: funcify
-              var in_target = false;
-              if(e.clientX - parseInt(e.currentTarget.parentNode.offsetLeft) - 2*border_width >= parseInt(targets[j].style.left)
-                  && e.clientX - parseInt(e.currentTarget.parentNode.offsetLeft) - 2*border_width <= parseInt(targets[j].style.left) + stim_width 
-                  && e.clientY - parseInt(e.currentTarget.parentNode.offsetTop) - 2*border_width >= parseInt(targets[j].style.top) 
-                  && e.clientY - parseInt(e.currentTarget.parentNode.offsetTop) - 2*border_width <= parseInt(targets[j].style.top) + stim_height) {
-                in_target = true;
-              }
-  
-              var target_empty = targets[j].dataset.filled == -1;
-              
-              //Case: elem is in range and target hasn't been snapped ==> snap to (assume) target's position
-              if(in_target && target_empty){ 
-                e.currentTarget.style.left = (parseInt(targets[j].style.left) + offset - 2*border_width)+'px'; 
-                e.currentTarget.style.top = (parseInt(targets[j].style.top) + offset - 2*border_width)+'px'; 
-  
-                targets[j].style.borderColor = 'lightblue';
-                targets[j].dataset.filled = e.currentTarget.dataset.id;
-                e.currentTarget.dataset.snapped = targets[j].dataset.id;
-  
-                var end_t = performance.now(); 
-                  
-                //collecting event times for case
-                RTs.push({
-                  'word': e.currentTarget.innerHTML,
-                  'time': end_t-start_time,
-                  'target': j,
-                  'mode': 'entering',
-                }) 
-                e.currentTarget.removeEventListener('mouseup', mouseupevent);
-                return;
-              }
-              //Case: elem is in range and target has been snapped ==> return to default position
-              else if (in_target && !target_empty){  
-                var ind = e.currentTarget.dataset.id;
-                e.currentTarget.style.left = (init_locations[ind].x+'px'); 
-                e.currentTarget.style.top = (init_locations[ind].y+'px');
-  
-                //event times for case
-                var end_t = performance.now()
-                RTs.push({
-                  'word': e.currentTarget.innerHTML,
-                  'time': end_t-start_time,
-                  'target': j,
-                  'mode': 'full',
-                })         
-                e.currentTarget.removeEventListener('mouseup', mouseupevent);
-                return;
-              }
-            }  
-  
-            var ind = e.currentTarget.dataset.id;
-            e.currentTarget.style.left = (init_locations[ind].x+'px'); 
-            e.currentTarget.style.top = (init_locations[ind].y+'px');
-  
-            //event times for case
-            var end_t = performance.now()
+    plugin.info = {
+        name: 'my-free-sort',
+        description: '',
+        parameters: {
+            stimuli: {
+                type: jsPsych.plugins.parameterType.STRING,
+                pretty_name: 'Stimuli',
+                default: undefined,
+                array: true,
+                description: 'Words to be shown'
+            },
+            placeholder: {
+                type: jsPsych.plugins.parameterType.STRING,
+                pretty_name: 'placeholder',
+                default: undefined,
+                array: true,
+                description: 'Placeholder item for empty boxes'
+            },
+            list_length: {
+                type: jsPsych.plugins.parameterType.INT,
+                pretty_name: 'List Length',
+                default: null,
+                description: 'The implicit number of slots for items',
+            },
+            button_label: {
+                type: jsPsych.plugins.parameterType.STRING,
+                pretty_name: 'Button label',
+                default:  'Submit',
+                description: 'The text that appears on the button to continue to the next trial.'
+            },
+        }
+    }
+
+    function htmlToElement(html) {
+        var template = document.createElement('template');
+        html = html.trim(); // Never return a text node of whitespace as the result
+        template.innerHTML = html;
+        return template.content.firstChild;
+    }
+
+    plugin.trial = function(display_element, trial) {
+
+        function dragstartHandler(ev) {
+            ev.dataTransfer.setData("text/plain", ev.target.id)
+            ev.dataTransfer.dropEffect = "move";
+
+            let containers = document.querySelectorAll('[id^="draggable-"]');
+            containers.forEach(a => {
+                if(a.classList)
+                    a.classList.add('target-child')
+            });
+
+            let end_t = performance.now()
             RTs.push({
-              'word': e.currentTarget.innerHTML,
-              'time': end_t-start_time,
-              'target': -1,
-              'mode': 'missed',
-            })         
-            e.currentTarget.removeEventListener('mouseup', mouseupevent);
-          }
-          elem.addEventListener('mouseup', mouseupevent); //add click-finish listener to doc  
+                'word': ev.target,
+                'time': end_t-start_time,
+                'target': ev.target.parentNode.dataset.id,
+                'mode': 'leaving',
+            })
+        }
+
+        function dragoverHandler(ev) {
+            let target_parent = document.getElementById(ev.dataTransfer.getData("text/plain")).parentNode;
+            if(ev.target != target_parent) {
+                ev.preventDefault();
+                ev.dataTransfer.dropEffect = "move";
+            }
+        }
+
+        function dropHandler(ev) {
+            ev.preventDefault();
+            ev.dataTransfer.dropEffect = "move";
+
+            if(ev.target.dataset.filled == "true") {
+                // pop existing element back to start
+                let child = ev.target.firstChild;
+                let source = document.getElementById(`draggable-container-${child.dataset.id}`);
+                source.appendChild(child);
+
+                // Log that word is bumped from position
+                let end_t = performance.now()
+                RTs.push({
+                    'word': ev.target.firstChild,
+                    'time': end_t-start_time,
+                    'target': ev.target.dataset.id,
+                    'mode': 'leaving',
+                })
+            }
+
+            ev.target.dataset.filled = "true";
+
+            let dropped = document.getElementById(ev.dataTransfer.getData("text/plain"));
+
+            // if element is being moved from target, empty original target
+            if(dropped.parentNode.dataset.filled == "true") {
+                dropped.parentNode.dataset.filled = "false";
+            }
+
+            while (ev.target.firstChild) {
+                ev.target.removeChild(ev.target.lastChild);
+            }
+
+            ev.target.appendChild(dropped);
+        }
+
+        function dragEndHandler(ev) {
+            // handle end of drop
+            let containers = document.querySelectorAll('[id^="draggable-"]');
+            containers.forEach(a => {
+                if(a.classList)
+                    a.classList.remove('target-child')
+            });
+
+            let end_t = performance.now()
+            if(ev.dataTransfer.dropEffect != 'move') {
+                // not in target
+                if('jspsych-target' in ev.target.parentNode.classList 
+                || 'jspsych-target' == ev.target.parentNode.className) {
+                          RTs.push({
+                            'word': ev.target,
+                            'time': end_t-start_time,
+                            'target': -1,
+                            'mode': 'dropped',
+                          })         
+                }
+                else {
+                    RTs.push({
+                      'word': ev.target,
+                      'time': end_t-start_time,
+                      'target': -1,
+                      'mode': 'missed',
+                    })
+                }
+            }
+            else {
+                    RTs.push({
+                      'word': ev.target,
+                      'time': end_t-start_time,
+                      'target': ev.target.parentNode.dataset.id,
+                      'mode': 'entering',
+                    }) 
+            }
+        }
+
+        let time_elapsed = jsPsych.totalTime();
+        let start_time = performance.now(); //time elapsed since origin (window-load)
+        let RTs = []; // array to store dragged responses
+
+        let placeholder = htmlToElement(trial.placeholder);
+        placeholder.id = "draggable-placeholder";
+
+        if (trial.list_length == null) {
+            trial.list_length = trial.stimuli.length;
+        }
+
+        // TODO: move this to css
+        // TODO: coloring by css rule
+        var css_grid = `display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(${trial.list_length}, 1fr); width: 80%; height: 90%; min-width: 200px; min-height: 200px; align-items: center; margin-left: auto; margin-right: auto; row-gap: .5em; col-gap: .5em;`
+
+        let grid = document.createElement("div");
+        grid.className = "grid-container";
+        grid.style = css_grid;
+
+        //create draggable-word-element containers
+        for (var i = 0; i < trial.stimuli.length; i++) { 
+            let draggable_container = document.createElement("div");
+            draggable_container.style = `vertical-align: middle; grid-area: ${i + 1} / 2`;
+            draggable_container.id = `draggable-container-${i}`;
+
+            let draggable_content = htmlToElement(trial.stimuli[i]);
+            draggable_content.classList.add("jspsych-free-sort-draggable");
+            draggable_content.style.cursor = "move";
+            draggable_content.draggable = "true";
+            draggable_content.id = `draggable-${i}`;
+            draggable_content.dataset.id = `${i}`;
+            draggable_content.addEventListener('dragstart', dragstartHandler);
+
+            draggable_container.appendChild(draggable_content);
+            grid.appendChild(draggable_container);
+
+            let target = document.createElement("div");
+            target.classList.add("jspsych-target");
+            target.id = `target-container-${i}`;
+            target.dataset.filled=false;
+            target.style=`height: 100%; border: 2px solid red; margin:0px; grid-area: ${i+1} / 4`;
+            target.addEventListener('dragover', dragoverHandler);
+            target.addEventListener('drop', dropHandler);
+
+            target.appendChild(placeholder);
+            grid.append(target);
+        }
+        document.addEventListener('dragend', dragEndHandler);
+
+        let button = document.createElement('button');
+        button.id = "jspsych-free-sort-done-btn";
+        button.className = 'jspsych-btn';
+        button.appendChild(document.createTextNode(trial.button_label));
+
+
+        while (display_element.firstChild) {
+            display_element.removeChild(display_element.lastChild);
+        }
+        display_element.appendChild(grid);
+        display_element.appendChild(button);
+
+
+        /*-----------------------------------------Continue Button: Ending the Experiment-----------------------------------------*/
+
+        //continue button ends experiment, but only if all the boxes have been filled
+        display_element.querySelector('#jspsych-free-sort-done-btn').addEventListener('click', function() { 
+
+            let all_filled = true;
+            let targets = display_element.querySelectorAll("[id^='target-container-']")
+
+            targets.forEach(a => {
+                if(a.dataset.filled != 'true') {
+                    all_filled = false;
+                }
+            });
+
+            if(!all_filled) {
+                alert("fill all the boxes before pressing " + trial.button_label + "!");
+                return;
+            }
+
+            var end_time = performance.now();
+
+            //display original word order alongside new word order for easy order comparison
+            original_wordorder = [];
+            recalled_wordorder = [];
+            for(var i=0; i<trial.stimuli.length; i++){
+                original_wordorder.push(trial.stimuli[i]);
+                let recalled = document.getElementById(`target-container-${i}`).firstChild;
+                recalled_wordorder.push(recalled);
+            }
+
+            var trial_data = {
+                "original_wordorder": original_wordorder,
+                "final_wordorder": recalled_wordorder,
+                "drag_events": RTs,
+                "start_time": time_elapsed
+            }; 
+
+            jsPsych.finishTrial(trial_data);
         });
-      }
-  
-      /*-----------------------------------------Continue Button: Ending the Experiment-----------------------------------------*/
-  
-      //continue button ends experiment, but only if all the boxes have been filled
-      display_element.querySelector('#jspsych-free-sort-done-btn').addEventListener('click', function(){ 
-  
-        for(z=0;z<targets.length;z++){ 
-          if(targets[z].style.borderColor != 'lightblue'){
-            alert("fill all the boxes before pressing " + trial.button_label + "!");
-            return;
-          }
-        };
-          
-        var end_time = performance.now();
-        var final_locations = [];
-        var matches = display_element.querySelectorAll('.jspsych-free-sort-draggable');
-        for(var i=0; i<matches.length; i++){
-          final_locations.push({
-            "word": matches[i].innerHTML, 
-            "x": parseInt(matches[i].style.left), //elem left side to parent (arena) left side: string to int
-            "y": parseInt(matches[i].style.top) 
-          });
-        }
-        
-        //sort words by y value. a and b are two adjacent final_location object-literals, compared by their y values. sort_locs = comparison function.
-        function sort_locs(a,b){
-          return a.y > b.y ? 1 : b.y > a.y ? -1 : 0; 
-        }
-        final_locations.sort(sort_locs);
-        
-        //display original word order alongside new word order for easy order comparison
-        original_wordorder = [];
-        recalled_wordorder = [];
-        for(var i=0; i<matches.length; i++){
-          original_wordorder.push(trial.stimuli[i]); // init_locations[i].word);
-          recalled_wordorder.push(final_locations[i].word);
-        }
-  
-        //categorizing dataset by whether word was... 
-  
-        //JSON data object
-        var trial_data = { 
-          "init_locations": init_locations,
-          "final_locations": final_locations,
-          "original_wordorder": original_wordorder,
-          "final_wordorder": recalled_wordorder,
-          "drag_events": RTs,
-          "start_time": time_elapsed
-        }; 
-  
-        // advance to next part
-        display_element.innerHTML = '';
-        jsPsych.finishTrial(trial_data);
-      });
     };
     return plugin;
-  })();
+})();

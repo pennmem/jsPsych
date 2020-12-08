@@ -7,11 +7,17 @@ jsPsych.plugins["positional-html-display"] = (function() {
   plugin.info = {
     name: "positional-html-display",
     parameters: {
-        stimulus: {
+      stimulus: {
         type: jsPsych.plugins.parameterType.HTML_STRING, // BOOL, STRING, INT, FLOAT, FUNCTION, KEYCODE, SELECT, HTML_STRING, IMAGE, AUDIO, VIDEO, OBJECT, COMPLEX
         default: undefined,
         pretty_name: 'Stimulus', 
         description: 'The word, or list of words, to be displayed.'
+      },
+      placeholder: {
+        type: jsPsych.plugins.parameterType.HTML_STRING, // BOOL, STRING, INT, FLOAT, FUNCTION, KEYCODE, SELECT, HTML_STRING, IMAGE, AUDIO, VIDEO, OBJECT, COMPLEX
+        default: "<p></p>",
+        pretty_name: 'Placeholder', 
+        description: 'The item to be placed in empty boxes'
       },
       stimulus_duration: {
         type: jsPsych.plugins.parameterType.INT,
@@ -50,16 +56,22 @@ jsPsych.plugins["positional-html-display"] = (function() {
         description: 'Column to display html'
       },
       width: {
-        type: jsPsych.plugins.parameterType.INT, 
+        type: jsPsych.plugins.parameterType.STRING, 
         pretty_name: 'Width',
-        default: null,
+        default: 'undefined',
         description: 'The width of the display area',
       },
       height: {
-        type: jsPsych.plugins.parameterType.INT, 
+        type: jsPsych.plugins.parameterType.STRING, 
         pretty_name: 'Height',
-        default: null,
+        default: 'undefined',
         description: 'The height of the display area',
+      },
+      highlight: {
+        type: jsPsych.plugins.parameterType.BOOL, 
+        pretty_name: 'hightlight column',
+        default: false,
+        description: 'highlight the column where the stimulus is shown',
       }
     }
   }
@@ -81,8 +93,8 @@ jsPsych.plugins["positional-html-display"] = (function() {
 
   /*------------Check Sizing------------------*/
 
-    // TODO: set height and width
-    var css_grid = "<style>#container {display: grid; grid-template-columns: repeat(" + trial.grid_cols + ", 1fr); grid-template-rows: repeat(" + trial.grid_rows + ", 1fr); width: " + trial.width +"px; height: " + trial.height + "px; align-items:center} </style>";
+    // TODO: move this to css
+    var css_grid = `<style>#container {display: grid; grid-template-columns: repeat(${trial.grid_cols}, 1fr); grid-template-rows: repeat(${trial.grid_rows}, 1fr); width: 80%; height: 100%; min-width: 200px; min-height: 200px; align-items: center; margin-left: auto; margin-right: auto; row-gap: 1em; col-gap: 1em;} </style>`;
 
     if(trial.row > trial.grid_rows  || trial.col > trial.grid_cols) {
       throw "Grid index out of range";
@@ -93,16 +105,17 @@ jsPsych.plugins["positional-html-display"] = (function() {
     var display_element = jsPsych.getDisplayElement(); 
 
     //creating a new element to house the stimulus words
-    var container = '<div id="container">' + css_grid + '<div id="stimulus">' + trial.stimulus + '</div>' + '</div>';
+    let border = trial.highlight_col ? "1px solid #fff" : "0px";
+    let stimulus = "";
 
-    display_element.innerHTML = container;
-    var stim = display_element.querySelector("#container").querySelector("#stimulus");
-    stim.style.gridRow = trial.row;
-    stim.style.gridColumn = trial.col;
-    stim.style.textAlign = "center";
-    stim.style.marginTop = "0px"
-    stim.style.marginBottom = "0px"
-    stim.style.alignSelf = "center";
+    var container = '<div id="container">' + css_grid;
+
+    for(let i=0; i < trial.grid_rows; i++) {
+        stimulus = i+1 == trial.row ? trial.stimulus : trial.placeholder;
+        container += `<div class="grid_cell" style="grid-area: ${i+1} / ${trial.col}; border: ${border}">${stimulus}</div>`
+    }
+    display_element.innerHTML = container + '</div>';
+
 
     var after_response = function(info) {
         response.push(info);

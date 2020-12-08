@@ -112,7 +112,9 @@ window.jsPsych = (function() {
     // if undefined, then jsPsych will use the <body> tag and the entire page
     if(typeof opts.display_element == 'undefined'){
       // check if there is a body element on the page
+    
       var body = document.querySelector('body');
+      console.log(body);
       if (body === null) {
         document.documentElement.appendChild(document.createElement('body'));
       }
