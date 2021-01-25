@@ -65,8 +65,6 @@ jsPsych.plugins['reconstruction'] = (function() {
     // set-up key listeners
     var after_response = function(info) {
 
-      //console.log('fire');
-
       var key_i = trial.key_increase;
       var key_d = trial.key_decrease;
 
@@ -94,9 +92,6 @@ jsPsych.plugins['reconstruction'] = (function() {
     draw(param);
 
     function draw(param) {
-
-      //console.log(param);
-
       display_element.innerHTML = '<div id="jspsych-reconstruction-stim-container">'+trial.stim_function(param)+'</div>';
 
       // add submit button

@@ -1,4 +1,3 @@
-console.log("progressbar loaded");
 jsPsych.plugins["progressbar"] = (function() {
 
     // !!! NOTE !!! requires modified jsPsych client code bundled with this experiment,

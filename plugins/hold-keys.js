@@ -1,4 +1,3 @@
-console.log("hold-keys loaded");
 jsPsych.plugins["hold-keys"] = (function() {
 
     // !!! NOTE !!! requires modified jsPsych client code bundled with this experiment,

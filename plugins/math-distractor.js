@@ -82,7 +82,6 @@ jsPsych.plugins['math-distractor'] = (function() {
 
     var keyboard_listener = function(info) {
        // set up response collection
-       console.log(info.key)
       if (info.key=== ' ' | info.key=== ';' | info.key === 'Enter' | info.key===',') {
 
         // get recalled word

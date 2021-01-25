@@ -1,4 +1,3 @@
-console.log("audio test loaded");
 jsPsych.plugins['audio-test'] = (function() {
 
   var plugin = {};
@@ -63,7 +62,6 @@ jsPsych.plugins['audio-test'] = (function() {
     // add audio element
     var str = '<audio id="audio-test-track" class="audio-test-track" controls ' + (trial.autoplay ? "autoplay" : "") + '> <source src="' + trial.audio_file + 
                                   '" type="audio/wav">Your browser does not support the our audio. We ask that you switch browsers or return to MTurk at this time.</audio>';
-    console.log(str);
     display_element.innerHTML += str
 
     // add question and textbox for answer
@@ -84,7 +82,6 @@ jsPsych.plugins['audio-test'] = (function() {
       // set up response collection
       key_presses.push(info.key)
       key_times.push(info.rt)
-      console.log(info.key);
 
       if (info.key === ',' | info.key === 'Enter' | info.key === ';' | info.key === ' ') {
 

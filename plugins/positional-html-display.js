@@ -94,7 +94,7 @@ jsPsych.plugins["positional-html-display"] = (function() {
   /*------------Check Sizing------------------*/
 
     // TODO: move this to css
-    var css_grid = `<style>#container {display: grid; grid-template-columns: repeat(${trial.grid_cols}, 1fr); grid-template-rows: repeat(${trial.grid_rows}, 1fr); width: 80%; height: 100%; min-width: 200px; min-height: 200px; align-items: center; margin-left: auto; margin-right: auto; row-gap: 1em; col-gap: 1em;} </style>`;
+    var css_grid = `<style>#container {display: grid; grid-template-columns: repeat(${trial.grid_cols}, 1fr); grid-template-rows: repeat(${trial.grid_rows}, 1fr); width: 80%; height: 90%; min-width: 200px; min-height: 200px; align-items: center; margin-left: auto; margin-right: auto; row-gap: .5em; col-gap: .5em;} </style>`;
 
     if(trial.row > trial.grid_rows  || trial.col > trial.grid_cols) {
       throw "Grid index out of range";
@@ -105,7 +105,7 @@ jsPsych.plugins["positional-html-display"] = (function() {
     var display_element = jsPsych.getDisplayElement(); 
 
     //creating a new element to house the stimulus words
-    let border = trial.highlight_col ? "1px solid #fff" : "0px";
+    let border = trial.highlight_col ? "2px solid #fff" : "0px";
     let stimulus = "";
 
     var container = '<div id="container">' + css_grid;
@@ -138,10 +138,13 @@ jsPsych.plugins["positional-html-display"] = (function() {
     //hides stimulus after stimulus duration 
     if (trial.stimulus_duration !== null) { 
       jsPsych.pluginAPI.setTimeout(function() {
-        display_element.querySelector("#container").style.visibility = 'hidden';
+        display_element.querySelectorAll(".grid_cell").forEach(function(cell) {
+            // cell.firstChild.replaceWith(trial.placeholder);
+            cell.firstChild.innerHTML = trial.placeholder;
+        });
       }, trial.stimulus_duration);
     }
-  
+
     // function to end trial when it is time
     var end_trial = function() {
       // kill any remaining setTimeout handlers

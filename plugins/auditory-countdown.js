@@ -1,5 +1,4 @@
 // TODO: add hold key logic
-console.log("auditory loaded");
 jsPsych.plugins["auditory-countdown"] = (function() {
 
     // !!! NOTE !!! requires modified jsPsych client code bundled with this experiment,

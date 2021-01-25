@@ -52,6 +52,18 @@ jsPsych.plugins['my-free-sort'] = (function() {
 
     plugin.trial = function(display_element, trial) {
 
+        function _emptyTarget(dropped) {
+
+            // if element is being moved from target, empty original target
+            if(dropped.parentNode.dataset.filled == "true") {
+                dropped.parentNode.dataset.filled = "false";
+
+                let child = dropped.parentNode.removeChild(dropped.parentNode.lastChild);
+                let source = document.getElementById(`draggable-container-${child.dataset.id}`);
+                source.appendChild(child);
+            }
+        }
+
         function dragstartHandler(ev) {
             ev.dataTransfer.setData("text/plain", ev.target.id)
             ev.dataTransfer.dropEffect = "move";
@@ -59,6 +71,7 @@ jsPsych.plugins['my-free-sort'] = (function() {
             let containers = document.querySelectorAll('[id^="draggable-"]');
             containers.forEach(a => {
                 if(a.classList)
+                    // class used to prevent bubbling of drop
                     a.classList.add('target-child')
             });
 
@@ -73,7 +86,10 @@ jsPsych.plugins['my-free-sort'] = (function() {
 
         function dragoverHandler(ev) {
             let target_parent = document.getElementById(ev.dataTransfer.getData("text/plain")).parentNode;
-            if(ev.target != target_parent) {
+            let valid_target = 'jspsych-target' in ev.target.classList
+                || 'jspsych-target' == ev.target.className
+
+            if(ev.target != target_parent && valid_target) {
                 ev.preventDefault();
                 ev.dataTransfer.dropEffect = "move";
             }
@@ -83,11 +99,11 @@ jsPsych.plugins['my-free-sort'] = (function() {
             ev.preventDefault();
             ev.dataTransfer.dropEffect = "move";
 
+            let dropped = document.getElementById(ev.dataTransfer.getData("text/plain"));
             if(ev.target.dataset.filled == "true") {
                 // pop existing element back to start
-                let child = ev.target.firstChild;
-                let source = document.getElementById(`draggable-container-${child.dataset.id}`);
-                source.appendChild(child);
+                let bumped = ev.target.firstChild;
+                _emptyTarget(bumped);
 
                 // Log that word is bumped from position
                 let end_t = performance.now()
@@ -99,19 +115,9 @@ jsPsych.plugins['my-free-sort'] = (function() {
                 })
             }
 
+             // TODO: mark existing parent empty
+            _emptyTarget(dropped)
             ev.target.dataset.filled = "true";
-
-            let dropped = document.getElementById(ev.dataTransfer.getData("text/plain"));
-
-            // if element is being moved from target, empty original target
-            if(dropped.parentNode.dataset.filled == "true") {
-                dropped.parentNode.dataset.filled = "false";
-            }
-
-            while (ev.target.firstChild) {
-                ev.target.removeChild(ev.target.lastChild);
-            }
-
             ev.target.appendChild(dropped);
         }
 
@@ -120,20 +126,25 @@ jsPsych.plugins['my-free-sort'] = (function() {
             let containers = document.querySelectorAll('[id^="draggable-"]');
             containers.forEach(a => {
                 if(a.classList)
+                    // class used to prevent bubbling of drop
                     a.classList.remove('target-child')
             });
 
             let end_t = performance.now()
             if(ev.dataTransfer.dropEffect != 'move') {
+                // snap back to start
+                let dropped = document.getElementById(ev.dataTransfer.getData("text/plain"));
+                _emptyTarget(dropped)
+
                 // not in target
-                if('jspsych-target' in ev.target.parentNode.classList 
+                if('jspsych-target' in ev.target.parentNode.classList
                 || 'jspsych-target' == ev.target.parentNode.className) {
                           RTs.push({
                             'word': ev.target,
                             'time': end_t-start_time,
                             'target': -1,
                             'mode': 'dropped',
-                          })         
+                          })
                 }
                 else {
                     RTs.push({
@@ -194,7 +205,7 @@ jsPsych.plugins['my-free-sort'] = (function() {
             target.classList.add("jspsych-target");
             target.id = `target-container-${i}`;
             target.dataset.filled=false;
-            target.style=`height: 100%; border: 2px solid red; margin:0px; grid-area: ${i+1} / 4`;
+            target.style = `height: 100%; border: 2px solid red; margin:0px; grid-area: ${i+1} / 4`;
             target.addEventListener('dragover', dragoverHandler);
             target.addEventListener('drop', dropHandler);
 

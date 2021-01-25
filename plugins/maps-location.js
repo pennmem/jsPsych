@@ -93,7 +93,6 @@ jsPsych.plugins['maps-location'] = (function() {
         fullscreenControl: false,
         mapTypeId: google.maps.MapTypeId.ROADMAP
       }
-      console.log("creating map");
       map = new google.maps.Map(display_element.querySelector("#map-canvas"),
                                     myOptions);
      
