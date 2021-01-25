@@ -61,7 +61,7 @@ jsPsych.plugins['audio-test'] = (function() {
 
     // add audio element
     var str = '<audio id="audio-test-track" class="audio-test-track" controls ' + (trial.autoplay ? "autoplay" : "") + '> <source src="' + trial.audio_file + 
-                                  '" type="audio/wav">Your browser does not support the our audio. We ask that you switch browsers or return to MTurk at this time.</audio>';
+                                  '" type="audio/wav">Your browser does not support our audio. We ask that you switch browsers or return to MTurk at this time.</audio>';
     display_element.innerHTML += str
 
     // add question and textbox for answer
