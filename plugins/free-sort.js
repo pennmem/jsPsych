@@ -100,21 +100,18 @@ jsPsych.plugins['my-free-sort'] = (function() {
         }
 
         function dragoverHandler(ev) {
-            console.log(ev);
-            console.log(ev.dataTransfer.getData("text/plain"));
             // let target_parent = document.getElementById(ev.dataTransfer.getData("text/plain")).parentNode;
             let valid_target = ev.currentTarget.classList.contains('jspsych-target') || 'jspsych-target' == ev.currentTarget.className
 
             // if(ev.currentTarget != target_parent && valid_target) {
+            ev.preventDefault();
             if(valid_target) {
                 ev.dataTransfer.dropEffect = "move";
-                ev.preventDefault();
             }
         }
 
         function dropHandler(ev) {
             ev.preventDefault();
-            ev.dataTransfer.dropEffect = "move";
 
             let dropped = document.getElementById(ev.dataTransfer.getData("text/plain"));
             if(ev.currentTarget.dataset.filled == "true") {
