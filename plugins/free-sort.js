@@ -90,13 +90,6 @@ jsPsych.plugins['my-free-sort'] = (function() {
             ev.dataTransfer.setData("text/plain", ev.target.id)
             ev.dataTransfer.dropEffect = "move";
 
-            let containers = document.querySelectorAll('[id^="draggable-"]');
-            containers.forEach(a => {
-                if(a.classList)
-                    // class used to prevent bubbling of drop
-                    a.classList.add('target-child')
-            });
-
             let end_t = performance.now()
             RTs.push({
                 'word': ev.target,
@@ -107,10 +100,14 @@ jsPsych.plugins['my-free-sort'] = (function() {
         }
 
         function dragoverHandler(ev) {
-            let target_parent = document.getElementById(ev.dataTransfer.getData("text/plain")).parentNode;
+            console.log(ev);
+            console.log(ev.dataTransfer.getData("text/plain"));
+            // let target_parent = document.getElementById(ev.dataTransfer.getData("text/plain")).parentNode;
             let valid_target = ev.currentTarget.classList.contains('jspsych-target') || 'jspsych-target' == ev.currentTarget.className
 
-            if(ev.currentTarget != target_parent && valid_target) {
+            // if(ev.currentTarget != target_parent && valid_target) {
+            if(valid_target) {
+                ev.dataTransfer.dropEffect = "move";
                 ev.preventDefault();
             }
         }
@@ -142,21 +139,16 @@ jsPsych.plugins['my-free-sort'] = (function() {
 
         function dragEndHandler(ev) {
             // handle end of drop
-            let containers = document.querySelectorAll('[id^="draggable-"]');
-            containers.forEach(a => {
-                if(a.classList)
-                    // class used to prevent bubbling of drop
-                    a.classList.remove('target-child')
-            });
 
             let end_t = performance.now()
             if(ev.dataTransfer.dropEffect != 'move') {
                 // snap back to start
-                let dropped = document.getElementById(ev.dataTransfer.getData("text/plain"));
+
+                let dropped = ev.target;
                 _emptyTarget(dropped)
 
                 // not in target
-                if('jspsych-target' in ev.target.parentNode.classList
+                if(ev.target.parentNode.classList.contains('jspsych-target')
                 || 'jspsych-target' == ev.target.parentNode.className) {
                           RTs.push({
                             'word': ev.target,
@@ -180,7 +172,7 @@ jsPsych.plugins['my-free-sort'] = (function() {
                       'time': end_t-start_time,
                       'target': ev.target.parentNode.dataset.id,
                       'mode': 'entering',
-                    }) 
+                    })
             }
         }
 
