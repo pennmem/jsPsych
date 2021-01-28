@@ -34,6 +34,14 @@
 
 }
 
+.draggable-filled {
+    border: 2px solid white;
+}
+
+.draggable-empty {
+    border: 2px solid red;
+}
+
 #recall_box {
   font-family: 'Open Sans', 'Arial', sans-serif;
   font-size: 30px;

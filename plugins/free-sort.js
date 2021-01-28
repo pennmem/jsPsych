@@ -52,16 +52,38 @@ jsPsych.plugins['my-free-sort'] = (function() {
 
     plugin.trial = function(display_element, trial) {
 
+        function get_placeholder() {
+            let placeholder = htmlToElement(trial.placeholder);
+            placeholder.classList.add("draggable-placeholder");
+            return placeholder
+        }
+
         function _emptyTarget(dropped) {
 
             // if element is being moved from target, empty original target
             if(dropped.parentNode.dataset.filled == "true") {
-                dropped.parentNode.dataset.filled = "false";
+                let parent = dropped.parentNode;
+                parent.dataset.filled = "false";
 
-                let child = dropped.parentNode.removeChild(dropped.parentNode.lastChild);
+                parent.classList.add("draggable-empty");
+                parent.classList.remove("draggable-filled");
+
+                let child = parent.removeChild(dropped.parentNode.lastChild);
+                parent.appendChild(get_placeholder());
                 let source = document.getElementById(`draggable-container-${child.dataset.id}`);
                 source.appendChild(child);
             }
+        }
+
+        function _fillTarget(target, dropped) {
+            target.dataset.filled = "true";
+
+            target.classList.add("draggable-filled");
+            target.classList.remove("draggable-empty");
+
+            // remove placeholder from target element
+            target.removeChild(target.querySelector(".draggable-placeholder"));
+            target.appendChild(dropped);
         }
 
         function dragstartHandler(ev) {
@@ -86,12 +108,10 @@ jsPsych.plugins['my-free-sort'] = (function() {
 
         function dragoverHandler(ev) {
             let target_parent = document.getElementById(ev.dataTransfer.getData("text/plain")).parentNode;
-            let valid_target = 'jspsych-target' in ev.target.classList
-                || 'jspsych-target' == ev.target.className
+            let valid_target = ev.currentTarget.classList.contains('jspsych-target') || 'jspsych-target' == ev.currentTarget.className
 
-            if(ev.target != target_parent && valid_target) {
+            if(ev.currentTarget != target_parent && valid_target) {
                 ev.preventDefault();
-                ev.dataTransfer.dropEffect = "move";
             }
         }
 
@@ -100,25 +120,24 @@ jsPsych.plugins['my-free-sort'] = (function() {
             ev.dataTransfer.dropEffect = "move";
 
             let dropped = document.getElementById(ev.dataTransfer.getData("text/plain"));
-            if(ev.target.dataset.filled == "true") {
+            if(ev.currentTarget.dataset.filled == "true") {
                 // pop existing element back to start
-                let bumped = ev.target.firstChild;
+                let bumped = ev.currentTarget.firstChild;
                 _emptyTarget(bumped);
 
                 // Log that word is bumped from position
                 let end_t = performance.now()
                 RTs.push({
-                    'word': ev.target.firstChild,
+                    'word': ev.currentTarget.firstChild,
                     'time': end_t-start_time,
-                    'target': ev.target.dataset.id,
+                    'target': ev.currentTarget.dataset.id,
                     'mode': 'leaving',
                 })
             }
 
-             // TODO: mark existing parent empty
+            // clear parent opening for current item
             _emptyTarget(dropped)
-            ev.target.dataset.filled = "true";
-            ev.target.appendChild(dropped);
+            _fillTarget(ev.currentTarget, dropped);
         }
 
         function dragEndHandler(ev) {
@@ -169,8 +188,6 @@ jsPsych.plugins['my-free-sort'] = (function() {
         let start_time = performance.now(); //time elapsed since origin (window-load)
         let RTs = []; // array to store dragged responses
 
-        let placeholder = htmlToElement(trial.placeholder);
-        placeholder.id = "draggable-placeholder";
 
         if (trial.list_length == null) {
             trial.list_length = trial.stimuli.length;
@@ -187,11 +204,13 @@ jsPsych.plugins['my-free-sort'] = (function() {
         //create draggable-word-element containers
         for (var i = 0; i < trial.stimuli.length; i++) { 
             let draggable_container = document.createElement("div");
-            draggable_container.style = `vertical-align: middle; grid-area: ${i + 1} / 2`;
+            draggable_container.style.cssText = `vertical-align: middle; grid-area: ${i + 1} / 2`;
             draggable_container.id = `draggable-container-${i}`;
+            draggable_container.classList.add('draggable-container');
 
             let draggable_content = htmlToElement(trial.stimuli[i]);
-            draggable_content.classList.add("jspsych-free-sort-draggable");
+            draggable_content.classList.add("jspsych-free-sort-draggable"); // is this used for styling?
+            draggable_content.classList.add('draggable-item');
             draggable_content.style.cursor = "move";
             draggable_content.draggable = "true";
             draggable_content.id = `draggable-${i}`;
@@ -203,13 +222,14 @@ jsPsych.plugins['my-free-sort'] = (function() {
 
             let target = document.createElement("div");
             target.classList.add("jspsych-target");
+            target.classList.add("draggable-empty");
             target.id = `target-container-${i}`;
             target.dataset.filled=false;
-            target.style = `height: 100%; border: 2px solid red; margin:0px; grid-area: ${i+1} / 4`;
+            target.style.cssText = `height: 100%; margin:0px; grid-area: ${i+1} / 4`;
             target.addEventListener('dragover', dragoverHandler);
             target.addEventListener('drop', dropHandler);
 
-            target.appendChild(placeholder);
+            target.appendChild(get_placeholder());
             grid.append(target);
         }
         document.addEventListener('dragend', dragEndHandler);
