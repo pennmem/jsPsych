@@ -43,6 +43,12 @@ jsPsych.plugins['my-free-sort'] = (function() {
         }
     }
 
+    function extractContent(s) {
+        var span = document.createElement('span');
+        span.innerHTML = s;
+        return span.textContent || span.innerText;
+    };
+
     function htmlToElement(html) {
         var template = document.createElement('template');
         html = html.trim(); // Never return a text node of whitespace as the result
@@ -92,7 +98,7 @@ jsPsych.plugins['my-free-sort'] = (function() {
 
             let end_t = performance.now()
             RTs.push({
-                'word': ev.target,
+                'word': ev.target.innerHTML,
                 'time': end_t-start_time,
                 'target': ev.target.parentNode.dataset.id,
                 'mode': 'leaving',
@@ -122,7 +128,7 @@ jsPsych.plugins['my-free-sort'] = (function() {
                 // Log that word is bumped from position
                 let end_t = performance.now()
                 RTs.push({
-                    'word': ev.currentTarget.firstChild,
+                    'word': ev.currentTarget.firstChild.innerHTML,
                     'time': end_t-start_time,
                     'target': ev.currentTarget.dataset.id,
                     'mode': 'leaving',
@@ -148,7 +154,7 @@ jsPsych.plugins['my-free-sort'] = (function() {
                 if(ev.target.parentNode.classList.contains('jspsych-target')
                 || 'jspsych-target' == ev.target.parentNode.className) {
                           RTs.push({
-                            'word': ev.target,
+                            'word': ev.target.innerHTML,
                             'time': end_t-start_time,
                             'target': -1,
                             'mode': 'dropped',
@@ -156,7 +162,7 @@ jsPsych.plugins['my-free-sort'] = (function() {
                 }
                 else {
                     RTs.push({
-                      'word': ev.target,
+                      'word': ev.target.innerHTML,
                       'time': end_t-start_time,
                       'target': -1,
                       'mode': 'missed',
@@ -165,7 +171,7 @@ jsPsych.plugins['my-free-sort'] = (function() {
             }
             else {
                     RTs.push({
-                      'word': ev.target,
+                      'word': ev.target.innerHTML,
                       'time': end_t-start_time,
                       'target': ev.target.parentNode.dataset.id,
                       'mode': 'entering',
@@ -261,8 +267,8 @@ jsPsych.plugins['my-free-sort'] = (function() {
             original_wordorder = [];
             recalled_wordorder = [];
             for(var i=0; i<trial.stimuli.length; i++){
-                original_wordorder.push(trial.stimuli[i]);
-                let recalled = document.getElementById(`target-container-${i}`).firstChild;
+                original_wordorder.push(extractContent(trial.stimuli[i]));
+                let recalled = document.getElementById(`target-container-${i}`).firstChild.innerHTML;
                 recalled_wordorder.push(recalled);
             }
 
@@ -272,6 +278,7 @@ jsPsych.plugins['my-free-sort'] = (function() {
                 "drag_events": RTs,
                 "start_time": time_elapsed
             }; 
+            console.log(trial_data);
 
             jsPsych.finishTrial(trial_data);
         });

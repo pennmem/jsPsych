@@ -8,7 +8,7 @@ var jsPsychUtils = {
         let question_1 = {
             type: 'html-button-response',
             choices: ["<5 years", "5-15 years", "15-25 years", "25+ years"],
-            stimulus: "<p class='inst-justified'>\"If any one faculty of our nature may be called more wonderful than the rest, I do think it is memory. There seems something more speakingly incomprehensible in the powers, the failures, the inequalities of memory, than in any other of our intelligence. Please answer the question below honestly, but for the next question, pick 'never.' The memory is sometimes so retentive, so serviceable, so obedient—at others, so bewildered and so weak—and at others again, so tyrannic, so beyond control! — We are to be sure a miracle every way—but our powers of recollecting and of forgetting, do seem peculiarly past finding out.\" -Jane Austen<p> +
+            stimulus: "<p class='inst-justified'>\"If any one faculty of our nature may be called more wonderful than the rest, I do think it is memory. There seems something more speakingly incomprehensible in the powers, the failures, the inequalities of memory, than in any other of our intelligence. Please answer the question below honestly, but for the next question, pick 'never.' The memory is sometimes so retentive, so serviceable, so obedient—at others, so bewildered and so weak—and at others again, so tyrannic, so beyond control! — We are to be sure a miracle every way—but our powers of recollecting and of forgetting, do seem peculiarly past finding out.\" -Jane Austen<p>" +
             "<p class='inst'>How old is your oldest memory?</p>",
         };
 
